@@ -6,22 +6,25 @@
 <title>Dev Tools — Bookmarks</title>
 <style>
   :root {
-    --bg: #0d1117; --surface: #161b22; --border: #30363d;
-    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
-    --accent2: #3fb950; --warn: #d29922;
+    color-scheme: light dark;
+    --bg: light-dark(#f6f8fa, #0d1117);
+    --surface: light-dark(#ffffff, #161b22);
+    --border: light-dark(#d0d7de, #30363d);
+    --text: light-dark(#1f2328, #e6edf3);
+    --muted: light-dark(#656d76, #8b949e);
+    --accent: light-dark(#0969da, #58a6ff);
+    --accent2: light-dark(#1a7f37, #3fb950);
+    --warn: light-dark(#9a6700, #d29922);
+    --tag-bg: light-dark(#d0d7de, #21262d);
+    --tag-fg: light-dark(#24292f, #e6edf3);
+    --tag-green-bg: light-dark(#dafbe1, #1a7f37);
+    --tag-green-fg: light-dark(#044122, #f6f8fa);
+    --tag-yellow-bg: light-dark(#fae176, #d29922);
+    --tag-yellow-fg: light-dark(#654000, #0d1117);
+    --btn-bg: light-dark(#eaeef2, #0000);
   }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: #f6f8fa; --surface: #ffffff; --border: #d0d7de;
-      --text: #1f2328; --muted: #656d76; --accent: #0969da;
-      --accent2: #1a7f37; --warn: #9a6700;
-    }
-  }
-  @media (prefers-color-scheme: light) {
-    .theme-toggle {
-      background: #eaeef2; color: var(--text); border-color: var(--border);
-    }
-  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 2rem 1rem; }
   header { max-width: 960px; margin: 0 auto 2rem; text-align: center; }
@@ -39,38 +42,31 @@
   .card a { color: var(--text); text-decoration: none; font-weight: 600; }
   .card a:hover { color: var(--accent); }
   .card p { color: var(--muted); font-size: .82rem; margin-top: .2rem; }
-  .tag { display: inline-block; font-size: .7rem; padding: .1rem .45rem; border-radius: 4px; margin-top: .4rem; margin-right: .25rem; background: #21262d; color: #e6edf3; }
-  .tag.green { background: #1a7f37; color: #f6f8fa; }
-  .tag.yellow { background: #d29922; color: #0d1117; }
+  .tag { display: inline-block; font-size: .7rem; padding: .1rem .45rem; border-radius: 4px; margin-top: .4rem; margin-right: .25rem; background: var(--tag-bg); color: var(--tag-fg); }
+  .tag.green { background: var(--tag-green-bg); color: var(--tag-green-fg); }
+  .tag.yellow { background: var(--tag-yellow-bg); color: var(--tag-yellow-fg); }
+  .theme-toggle { background: var(--btn-bg); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: .35rem .6rem; cursor: pointer; font-size: .85rem; line-height: 1.2; }
+  .theme-toggle:hover { border-color: var(--accent); }
   footer { text-align: center; color: var(--muted); font-size: .8rem; margin-top: 3rem; }
   .card.hidden { display: none; }
-  html[data-theme="light"] {
-    --bg: #f6f8fa; --surface: #ffffff; --border: #d0d7de;
-    --text: #1f2328; --muted: #656d76; --accent: #0969da;
-    --accent2: #1a7f37; --warn: #9a6700;
-  }
-  html[data-theme="light"] .theme-toggle {
-    background: #eaeef2; color: var(--text); border-color: var(--border);
-  }
-  html[data-theme="light"] .tag {
-    background: #d0d7de; color: #24292f;
-  }
-  html[data-theme="light"] .tag.green {
-    background: #dafbe1; color: #044122;
-  }
-  html[data-theme="light"] .tag.yellow {
-    background: #fae176; color: #654000;
-  }
 </style>
+<script>
+(function() {
+  var saved;
+  try { saved = localStorage.getItem('theme'); } catch (e) {}
+  if (saved !== 'light' && saved !== 'dark') {
+    saved = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  document.documentElement.dataset.theme = saved;
+})();
+</script>
 </head>
 <body>
 
 <header>
   <div style="display:flex;justify-content:space-between;align-items:center;max-width:960px;margin:0 auto 1rem;">
     <h1 style="font-size:1.8rem;margin-bottom:.25rem;"><span>Dev</span> Tools</h1>
-    <button id="theme-toggle" class="theme-toggle" title="Toggle theme" style="background:transparent;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:.35rem .6rem;cursor:pointer;font-size:.85rem;">
-      ☾
-    </button>
+    <button id="theme-toggle" class="theme-toggle" title="Toggle theme" aria-label="Toggle theme">&#9790;</button>
   </div>
   <p style="max-width:960px;margin:0 auto 1.5rem;color:var(--muted);font-size:.95rem;">Essential tools for developers</p>
 </header>
@@ -156,13 +152,22 @@
 
 <script>
 (function() {
+  var root = document.documentElement;
   var btn = document.getElementById('theme-toggle');
-  var icon = btn.textContent;
+
+  function paint() {
+    var light = root.dataset.theme === 'light';
+    btn.innerHTML = light ? '&#9790;' : '&#9728;';
+    btn.setAttribute('aria-label', light ? 'Switch to dark theme' : 'Switch to light theme');
+  }
+
   btn.addEventListener('click', function() {
-    var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
-    document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
-    btn.textContent = isDark ? '☀' : 'moon';
+    root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
+    try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+    paint();
   });
+
+  paint();
 })();
 
 function filter() {
